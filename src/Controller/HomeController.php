@@ -6,6 +6,8 @@ use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Annotation\Route;
 
+require_once(__DIR__."/../Entity/Pdo.class.php");
+
 class HomeController extends AbstractController
 {
     #[Route('/', name: 'app_home')]

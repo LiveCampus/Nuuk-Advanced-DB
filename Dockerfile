@@ -6,6 +6,7 @@ WORKDIR /app
 RUN apt update
 RUN apt install -y libzip-dev wget
 RUN docker-php-ext-install zip
+RUN docker-php-ext-install pdo_mysql
 
 ENV COMPOSER_ALLOW_SUPERUSER=1
 
