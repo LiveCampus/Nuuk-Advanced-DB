@@ -1,0 +1,19 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Edit Tamagotchi{% endblock %}
+
+{% block body %}
+    <div class="container center">
+        {{ form_start(form, {'attr': {'class': 'form'}}) }}
+            <h1 class="title">Modifier votre Tamagotchi</h1>
+            <hr class="separation">
+
+            <div class="form__row">
+                {{ form_label(form.name, null, {'label_attr': {'class': 'form__label'}}) }}
+                {{ form_widget(form.name, {'attr': {'class': 'form__input'}}) }}
+            </div>
+            <button type="submit" class="form__submit">Modifier</button>
+            <a href="{{ path('tamagotchi_index', {'id': user.id.toBase58}) }}" class="form__cancel">Retournez à la liste</a>
+        {{ form_end(form) }}
+    </div>
+{% endblock %}

@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ "Mon cimetière - " ~ parent() }}{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="header">
+            <h1 class="title">Mon cimetière</h1>
+            <a href="{{ path('tamagotchi_index', {'id': user.id.toBase58}) }}" class="add">
+                <span class="add__icon">
+                    <i class="fa-solid fa-person-running"></i>
+                </span>
+                <p class="add__text">Voir ceux vivants</p>
+            </a>
+        </div>
+        <hr class="separation">
+
+        <div class="grid">
+            {% for tamagotchi in tamagotchis %}
+                <div class="card dead">
+                    <div class="card__header">
+                        <form method="post" action="{{ path('tamagotchi_delete', {'id': user.id.toBase58, 'name': tamagotchi.name}) }}" onsubmit="return confirm('Êtes-vous sûr de supprimer ce Tamagotchi !');">
+                            <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tamagotchi.id) }}">
+
+                            <button class="card__delete">
+                                <span class="card__delete__icon">
+                                    <i class="fa-solid fa-trash"></i>
+                                </span>
+                            </button>
+                        </form>
+                        <img src="{{ asset('assets/images/tamagotchi.png') }}" alt="Tamagotchi" class="card__img">
+                    </div>
+                    <div class="card__body">
+                        <h2 class="card__name">{{ tamagotchi.name }}</h2>
+                        <ul class="card__informations">
+                            <li class="card__statistic">
+                                <i class="fa-solid fa-cake-candles"></i>
+                                {{ tamagotchi.createdAt|date("d/m/Y") }}
+                            </li>
+                            <li class="card__statistic">
+                                <i class="fa-solid fa-cross"></i>
+                                {{ tamagotchi.diedOn|date("d/m/Y") }}
+                            </li>
+                            <li class="card__statistic">
+                                Niveau
+                                {{ tamagotchi.level }}
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% endblock %}

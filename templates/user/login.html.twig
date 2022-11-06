@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ "Connexion - " ~ parent() }}{% endblock %}
+
+{% block body %}
+    <div class="container center">
+        <form action="{{ path('user_connect') }}" class="form">
+            <h1 class="title">Connectez-vous à votre compte</h1>
+            <hr class="separation">
+
+            <div class="form__row">
+                <label for="username" class="form__label required">Votre nom</label>
+                <input type="text" class="form__input" id="username" name="username">
+            </div>
+            <div class="form__row">
+                <label for="firstTamagotchi" class="form__label required">Nom de votre premier tamagotchi</label>
+                <input type="text" class="form__input" id="firstTamagotchi" name="firstTamagotchi">
+            </div>
+            <button class="form__submit">Se connecter</button>
+            <p class="form__message">
+                Pas encore de compte ?
+                <a href="{{ path('user_signup') }}" class="form__link">Se créer un compte</a>
+            </p>
+        </form>
+    </div>
+{% endblock %}

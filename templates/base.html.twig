@@ -1,18 +1,40 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
     <head>
         <meta charset="UTF-8">
-        <title>{% block title %}Welcome!{% endblock %}</title>
-        {# Run `composer require symfony/webpack-encore-bundle` to start using Symfony UX #}
-        {% block stylesheets %}
-            {{ encore_entry_link_tags('app') }}
-        {% endblock %}
+        <title>{% block title %}Nuukotchi{% endblock %}</title>
+        <link rel="icon" href="{{ asset('favicon.ico') }}">
 
-        {% block javascripts %}
-            {{ encore_entry_script_tags('app') }}
-        {% endblock %}
+        {# Google Font #}
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Lora:wght@600&family=Raleway:wght@200;400;700&display=swap" rel="stylesheet">
+
+        {# Font Awesome #}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.0/css/all.min.css" integrity="sha512-xh6O/CkQoPOWDdYTDqeRdPCVd1SpvCA9XXcUnZS2FmJNp1coAFzvtCN9BmamE+4aHK8yyUHUSCcJHgXloTyT2A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+        <link rel="stylesheet" href="{{ asset('assets/style/app.css') }}">
+
+        {% block javascripts %}{% endblock %}
     </head>
     <body>
-        {% block body %}{% endblock %}
+        <header>
+            {% include 'partials/_header.html.twig' %}
+        </header>
+        <main>
+            {% block body %}{% endblock %}
+
+            {% if app.session.get('flashes') is not empty %}
+                <div class="flashes">
+                    {% for type, message in app.session.get('flashes') %}
+                        <div class="flash--{{ type }}">{{ message }}</div>
+                    {% endfor %}
+                    {% do app.session.remove("flashes") %}
+                </div>
+            {% endif %}
+        </main>
+        <footer>
+            {% include 'partials/_footer.html.twig' %}
+        </footer>
     </body>
 </html>

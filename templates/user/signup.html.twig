@@ -1,0 +1,26 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ "Inscription - " ~ parent() }}{% endblock %}
+
+{% block body %}
+    <div class="container center">
+        <form action="{{ path('user_create') }}" class="form">
+            <h1 class="title">Inscrivez-vous</h1>
+            <hr class="separation">
+
+            <div class="form__row">
+                <label for="username" class="form__label required">Votre nom</label>
+                <input type="text" class="form__input" id="username" name="username">
+            </div>
+            <div class="form__row">
+                <label for="firstTamagotchi" class="form__label required">Nom de votre premier tamagotchi</label>
+                <input type="text" class="form__input" id="firstTamagotchi" name="firstTamagotchi">
+            </div>
+            <button class="form__submit">S'inscrire</button>
+            <p class="form__message">
+                Déjà un compte ?
+                <a href="{{ path('user_login') }}" class="form__link">Se connecter</a>
+            </p>
+        </form>
+    </div>
+{% endblock %}

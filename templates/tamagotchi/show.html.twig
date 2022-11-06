@@ -1,0 +1,104 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Tamagotchi{% endblock %}
+
+{% block body %}
+    <div class="container">
+        <div class="header">
+            <div>
+                <div class="level">
+                    <i class="fa-regular fa-square"></i>
+                    <span>{{ tamagotchi.level }}</span>
+                </div>
+                <h1 class="title">{{ tamagotchi.name }}</h1>
+            </div>
+            <a href="{{ path('tamagotchi_index', {'id': user.id.toBase58}) }}" class="add">
+                    <span class="add__icon">
+                        <i class="fa-solid fa-arrow-left-long"></i>
+                    </span>
+                <p class="add__text">Retourner à la liste</p>
+            </a>
+        </div>
+        <div class="date">
+            Date de naissance : {{ tamagotchi.createdAt|date('d/m/Y') }}
+        </div>
+        <hr class="separation">
+
+        <ul class="informations">
+            <li class="statistic {{ tamagotchi.hunger < 30 ? "warning" : "" }}">
+                <strong class="statistic__label">
+                    <i class="fa-solid fa-drumstick-bite"></i>
+                    Faim :
+                </strong>
+                {{ tamagotchi.hunger }}/100
+            </li>
+            <li class="statistic {{ tamagotchi.thirst < 30 ? "warning" : "" }}">
+                <strong class="statistic__label">
+                    <i class="fa-solid fa-droplet"></i>
+                    Soifs :
+                </strong>
+                {{ tamagotchi.thirst }}/100
+            </li>
+            <li class="statistic {{ tamagotchi.sleep < 30 ? "warning" : "" }}">
+                <strong class="statistic__label">
+                    <i class="fa-solid fa-bed"></i>
+                    Sommeil :
+                </strong>
+                {{ tamagotchi.sleep }}/100
+            </li>
+            <li class="statistic {{ tamagotchi.boredom < 30 ? "warning" : "" }}">
+                <strong class="statistic__label">
+                    <i class="fa-solid fa-football"></i>
+                    Ennui :
+                </strong>
+                {{ tamagotchi.boredom }}/100
+            </li>
+        </ul>
+
+        <h2 class="subtitle">Actions</h2>
+        <ul class="actions">
+            <li class="action">
+                <a href="{{ path('tamagotchi_eat', {'id': user.id.toBase58, 'name': tamagotchi.name}) }}">
+                    Donner à manger au tamagotchi
+                </a>
+            </li>
+            <li class="action">
+                <a href="{{ path('tamagotchi_drink', {'id': user.id.toBase58, 'name': tamagotchi.name}) }}">
+                    Donner à boire au tamagotchi
+                </a>
+            </li>
+            <li class="action">
+                <a href="{{ path('tamagotchi_sleep', {'id': user.id.toBase58, 'name': tamagotchi.name}) }}">
+                    Coucher le tamagotchi
+                </a>
+            </li>
+            <li class="action">
+                <a href="{{ path('tamagotchi_play', {'id': user.id.toBase58, 'name': tamagotchi.name}) }}">
+                    Jouer avec le tamagotchi
+                </a>
+            </li>
+        </ul>
+
+        <hr class="separation">
+        <div class="buttons">
+            <a href="{{ path('tamagotchi_edit', {'id': user.id.toBase58, 'name': tamagotchi.name}) }}" class="edit">
+                <span class="edit__icon">
+                    <i class="fa-solid fa-pen"></i>
+                </span>
+                <p class="edit__text">Modifier</p>
+            </a>
+            <form method="post" action="{{ path('tamagotchi_delete', {'id': user.id.toBase58, 'name': tamagotchi.name}) }}" onsubmit="return confirm('Êtes-vous sûr de supprimer ce Tamagotchi !');">
+                <input type="hidden" name="_token" value="{{ csrf_token('delete' ~ tamagotchi.id) }}">
+
+                <button class="delete">
+                    <span class="delete__icon">
+                        <i class="fa-solid fa-trash"></i>
+                    </span>
+                    <span class="delete__text">
+                        Supprimer
+                    </span>
+                </button>
+            </form>
+        </div>
+    </div>
+{% endblock %}
