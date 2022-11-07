@@ -1,11 +1,11 @@
 {% extends 'base.html.twig' %}
 
-{% block title %}{{ "Inscription - " ~ parent() }}{% endblock %}
+{% block title %}{{ "Connexion - " ~ parent() }}{% endblock %}
 
 {% block body %}
     <div class="container center">
-        <form action="{{ path('user_create') }}" class="form">
-            <h1 class="title">Inscrivez-vous</h1>
+        <form action="{{ path('owner_connect') }}" class="form">
+            <h1 class="title">Connectez-vous à votre compte</h1>
             <hr class="separation">
 
             <div class="form__row">
@@ -16,10 +16,10 @@
                 <label for="firstTamagotchi" class="form__label required">Nom de votre premier tamagotchi</label>
                 <input type="text" class="form__input" id="firstTamagotchi" name="firstTamagotchi">
             </div>
-            <button class="form__submit">S'inscrire</button>
+            <button class="form__submit">Se connecter</button>
             <p class="form__message">
-                Déjà un compte ?
-                <a href="{{ path('user_login') }}" class="form__link">Se connecter</a>
+                Pas encore de compte ?
+                <a href="{{ path('owner_signup') }}" class="form__link">Se créer un compte</a>
             </p>
         </form>
     </div>

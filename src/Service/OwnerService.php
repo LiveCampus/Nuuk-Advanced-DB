@@ -2,16 +2,15 @@
 
 namespace App\Service;
 
+use App\Entity\Owner;
 use App\Entity\Tamagotchi;
-use App\Entity\User;
 use App\Repository\OwnerRepository;
 use Doctrine\ORM\EntityManagerInterface;
-use Symfony\Component\Uid\Uuid;
 
-class UserService
+class OwnerService
 {
     public function __construct(
-        private readonly OwnerRepository        $userRepository,
+        private readonly OwnerRepository        $ownerRepository,
         private readonly EntityManagerInterface $manager
     ) {}
 
@@ -20,11 +19,11 @@ class UserService
      * Si aucun n'existe, retourne null
      *
      * @param string $name
-     * @return User|null
+     * @return Owner|null
      */
-    public function existingUser(string $name): ?User
+    public function existingUser(string $name): ?Owner
     {
-        return $this->userRepository->findOneBy(['name' => $name]);
+        return $this->ownerRepository->findOneBy(['name' => $name]);
     }
 
     /**
@@ -33,24 +32,24 @@ class UserService
      *
      * @param string $username
      * @param string $firstTamagotchi
-     * @return Uuid
+     * @return int
      */
-    public function createUser(string $username, string $firstTamagotchi): Uuid
+    public function createUser(string $username, string $firstTamagotchi): int
     {
-        $user = new User();
-        $user->setName($username);
+        $owner = new Owner();
+        $owner->setName($username);
 
         $tamagotchi = new Tamagotchi();
         $tamagotchi
             ->setName($firstTamagotchi)
-            ->setOwner($user)
+            ->setOwner($owner)
             ->setFirst(true)
         ;
 
-        $this->manager->persist($user);
+        $this->manager->persist($owner);
         $this->manager->persist($tamagotchi);
         $this->manager->flush();
 
-        return $user->getId();
+        return $owner->getId();
     }
 }
