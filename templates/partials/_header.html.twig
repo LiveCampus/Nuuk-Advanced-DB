@@ -4,7 +4,7 @@
     </a>
 
     <ul class="nav__list">
-        {% if app.session.get('user') is empty %}
+        {% if app.session.get('owner') is empty %}
             <li class="nav__item">
                 <a href="{{ path('owner_login') }}" class="nav__link">Se connecter</a>
             </li>
@@ -13,7 +13,7 @@
             </li>
         {% else %}
             <li class="nav__item">
-                <a href="{{ path('tamagotchi_index', {id: app.session.get('user').toBase58}) }}" class="nav__link">Mes tamagotchis</a>
+                <a href="{{ path('tamagotchi_index', {id: app.session.get('owner')}) }}" class="nav__link">Mes tamagotchis</a>
             </li>
             <li class="nav__item">
                 <a href="{{ path('owner_logout') }}" class="nav__link">Se déconnecter</a>
