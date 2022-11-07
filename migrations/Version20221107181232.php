@@ -39,7 +39,7 @@ final class Version20221107181232 extends AbstractMigration
             alive TINYINT NOT NULL DEFAULT 1, 
             first TINYINT NOT NULL DEFAULT 0, 
             created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP, 
-            updated_at DATETIME
+            died_on DATETIME
         )");
         $this->addSql("ALTER TABLE Tamagotchi ADD CONSTRAINT FK_OwnerId FOREIGN KEY (owner_id) REFERENCES Owner(id)");
     }
