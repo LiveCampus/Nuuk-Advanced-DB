@@ -5,51 +5,52 @@ namespace App\Service;
 use App\Entity\Owner;
 use App\Entity\Tamagotchi;
 use App\Repository\OwnerRepository;
+use App\Repository\TamagotchiRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class OwnerService
 {
     public function __construct(
         private readonly OwnerRepository        $ownerRepository,
+        private readonly TamagotchiRepository   $tamagotchiRepository,
         private readonly EntityManagerInterface $manager
     ) {}
 
     /**
-     * Retourne l'utilisateur possédant le nom donné en paramètre
+     * Retourne l'ID du propriétaire possédant le nom donné en paramètre
      * Si aucun n'existe, retourne null
      *
      * @param string $name
-     * @return Owner|null
+     * @return int|null
      */
-    public function existingUser(string $name): ?Owner
+    public function existingOwner(string $name): ?int
     {
-        return $this->ownerRepository->findOneBy(['name' => $name]);
+        return $this->ownerRepository->getIdByName($name);
     }
 
     /**
-     * Créer un utilisateur avec son premier tamagotchi avec les noms donnés
-     * Retourne l'ID de l'utilisateur crée
+     * Retourne vrai si le nom du tamagotchi donné du propriétaire donnée est son premier
+     * Sinon retourne faux
      *
-     * @param string $username
+     * @param int $ownerId
+     * @param string $tamagotchiName
+     * @return bool
+     */
+    public function goodFirstTamagotchi(int $ownerId, string $tamagotchiName): bool
+    {
+        return (bool)$this->tamagotchiRepository->findFirstTamagotchiByName($ownerId, $tamagotchiName);
+    }
+
+    /**
+     * Créer un propriétaire avec son premier tamagotchi avec les noms donnés
+     * Retourne l'ID du propriétaire crée
+     *
+     * @param string $ownerName
      * @param string $firstTamagotchi
      * @return int
      */
-    public function createUser(string $username, string $firstTamagotchi): int
+    public function createOwner(string $ownerName, string $firstTamagotchi): int
     {
-        $owner = new Owner();
-        $owner->setName($username);
-
-        $tamagotchi = new Tamagotchi();
-        $tamagotchi
-            ->setName($firstTamagotchi)
-            ->setOwner($owner)
-            ->setFirst(true)
-        ;
-
-        $this->manager->persist($owner);
-        $this->manager->persist($tamagotchi);
-        $this->manager->flush();
-
-        return $owner->getId();
+        return $this->ownerRepository->createOwnerWithFirstTamagotchi($ownerName, $firstTamagotchi);
     }
 }

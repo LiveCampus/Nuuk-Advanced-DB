@@ -3,7 +3,6 @@
 namespace App\Controller;
 
 use App\Entity\Tamagotchi;
-use App\Entity\User;
 use App\Form\TamagotchiType;
 use App\Repository\TamagotchiRepository;
 use App\Service\SessionService;
@@ -18,76 +17,72 @@ use Symfony\Component\Routing\Annotation\Route;
 class TamagotchiController extends AbstractController
 {
     public function __construct(
-        private readonly TamagotchiRepository $tamagotchiRepository,
-        private SessionService $sessionService
+        private readonly TamagotchiRepository   $tamagotchiRepository,
+        private readonly SessionService         $sessionService
     )
     {}
 
-    #[Route('/{id}', name: 'index', methods: ['GET'])]
-    public function index(User $user): Response
+    #[Route('/{ownerId}', name: 'index', methods: ['GET'])]
+    public function index(int $ownerId): Response
     {
+        $tamagotchis = $this->tamagotchiRepository->findAliveTamagotchis($ownerId);
+        dd($tamagotchis);
         return $this->render('tamagotchi/index.html.twig', [
-            'user' => $user,
-            'tamagotchis' => $this->tamagotchiRepository->findBy(['owner' => $user, 'alive' => true]),
+            'owner' => $ownerId,
+            'tamagotchis' => $tamagotchis
         ]);
     }
 
-    #[Route('/{id}/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, User $user): Response
+    #[Route('/{ownerId}/new', name: 'new', methods: ['GET', 'POST'])]
+    public function new(Request $request, int $ownerId): Response
     {
         $tamagotchi = new Tamagotchi();
         $form = $this->createForm(TamagotchiType::class, $tamagotchi);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $tamagotchi->setOwner($user);
+            $tamagotchi->setOwner($ownerId);
             $this->tamagotchiRepository->save($tamagotchi, true);
 
-            return $this->redirectToRoute('tamagotchi_index', ['id' => $user->getId()], Response::HTTP_SEE_OTHER);
+            return $this->redirectToRoute('tamagotchi_index', ['id' => $ownerId], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('tamagotchi/new.html.twig', [
-            'user' => $user,
+            'user' => $ownerId,
             'tamagotchi' => $tamagotchi,
             'form' => $form,
         ]);
     }
 
-    #[Route('/{id}/cimetière', name: 'cemetery', methods: ['GET'])]
-    public function cemetery(User $user): Response
+    #[Route('/{ownerId}/cimetière', name: 'cemetery', methods: ['GET'])]
+    public function cemetery(int $ownerId): Response
     {
 
         return $this->render('tamagotchi/cemetery.html.twig', [
-            'user' => $user,
-            'tamagotchis' => $this->tamagotchiRepository->findBy(['owner' => $user, 'alive' => false]),
+            'user' => $ownerId,
+            'tamagotchis' => $this->tamagotchiRepository->findDeadTamagotchis($ownerId)
         ]);
     }
 
-    #[Route('/{id}/{name}', name: 'show', methods: ['GET'])]
-    #[ParamConverter('user', options: ['mapping' => ['id' => 'id']])]
-    #[ParamConverter('tamagotchi', options: ['mapping' => ['name' => 'name']])]
-    public function show(User $user, Tamagotchi $tamagotchi): Response
+    #[Route('/{ownerId}/{name}', name: 'show', methods: ['GET'])]
+    public function show(int $ownerId, string $name): Response
     {
         if (!$tamagotchi->isAlive()) return $this->redirectToRoute('tamagotchi_cemetery', ['id' => $user->getId()->toBase58()]);
 
         return $this->render('tamagotchi/show.html.twig', [
-            'user' => $user,
+            'user' => $ownerId,
             'tamagotchi' => $tamagotchi,
         ]);
     }
 
-    #[Route('/{id}/{name}/manger', name: 'eat', methods: ['GET'])]
-    #[ParamConverter('user', options: ['mapping' => ['id' => 'id']])]
-    #[ParamConverter('tamagotchi', options: ['mapping' => ['name' => 'name']])]
-    public function eat(User $user, Tamagotchi $tamagotchi): RedirectResponse
+    #[Route('/{ownerId}/{name}/manger', name: 'eat', methods: ['GET'])]
+    public function eat(int $ownerId, string $name): RedirectResponse
     {
         $this->tryAction($tamagotchi, "eat");
         return $this->redirectToRoute('tamagotchi_show', ["id" => $user->getId()->toBase58(), "name" => $tamagotchi->getName()]);
     }
 
     #[Route('/{id}/{name}/boire', name: 'drink', methods: ['GET'])]
-    #[ParamConverter('user', options: ['mapping' => ['id' => 'id']])]
-    #[ParamConverter('tamagotchi', options: ['mapping' => ['name' => 'name']])]
     public function drink(User $user, Tamagotchi $tamagotchi): RedirectResponse
     {
         $this->tryAction($tamagotchi, "drink");
@@ -95,8 +90,6 @@ class TamagotchiController extends AbstractController
     }
 
     #[Route('/{id}/{name}/dormir', name: 'sleep', methods: ['GET'])]
-    #[ParamConverter('user', options: ['mapping' => ['id' => 'id']])]
-    #[ParamConverter('tamagotchi', options: ['mapping' => ['name' => 'name']])]
     public function sleep(User $user, Tamagotchi $tamagotchi): RedirectResponse
     {
         $this->tryAction($tamagotchi, "sleep");
@@ -104,8 +97,6 @@ class TamagotchiController extends AbstractController
     }
 
     #[Route('/{id}/{name}/jouer', name: 'play', methods: ['GET'])]
-    #[ParamConverter('user', options: ['mapping' => ['id' => 'id']])]
-    #[ParamConverter('tamagotchi', options: ['mapping' => ['name' => 'name']])]
     public function play(User $user, Tamagotchi $tamagotchi): RedirectResponse
     {
         $this->tryAction($tamagotchi, "play");
@@ -113,8 +104,6 @@ class TamagotchiController extends AbstractController
     }
 
     #[Route('/{id}/{name}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    #[ParamConverter('user', options: ['mapping' => ['id' => 'id']])]
-    #[ParamConverter('tamagotchi', options: ['mapping' => ['name' => 'name']])]
     public function edit(Request $request,  User $user, Tamagotchi $tamagotchi): Response
     {
         $form = $this->createForm(TamagotchiType::class, $tamagotchi);
@@ -133,10 +122,8 @@ class TamagotchiController extends AbstractController
         ]);
     }
 
-    #[Route('/{id}/{name}', name: 'delete', methods: ['POST'])]
-    #[ParamConverter('user', options: ['mapping' => ['id' => 'id']])]
-    #[ParamConverter('tamagotchi', options: ['mapping' => ['name' => 'name']])]
-    public function delete(Request $request,  User $user, Tamagotchi $tamagotchi): Response
+    #[Route('/{ownerId}/{name}', name: 'delete', methods: ['POST'])]
+    public function delete(Request $request,  int $ownerId, string $name): Response
     {
         if ($this->isCsrfTokenValid('delete'.$tamagotchi->getId(), $request->request->get('_token'))) {
             if (!$tamagotchi->isFirst()) {

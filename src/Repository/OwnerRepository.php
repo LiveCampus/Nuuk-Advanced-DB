@@ -2,65 +2,37 @@
 
 namespace App\Repository;
 
-use App\Entity\Owner;
-use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
-use Doctrine\Persistence\ManagerRegistry;
+use Doctrine\ORM\EntityManagerInterface;
 
-/**
- * @extends ServiceEntityRepository<Owner>
- *
- * @method Owner|null find($id, $lockMode = null, $lockVersion = null)
- * @method Owner|null findOneBy(array $criteria, array $orderBy = null)
- * @method Owner[]    findAll()
- * @method Owner[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
- */
-class OwnerRepository extends ServiceEntityRepository
+class OwnerRepository
 {
-    public function __construct(ManagerRegistry $registry)
+    public function __construct(private readonly EntityManagerInterface $manager) {}
+
+    public function getIdByName(string $name): ?int
     {
-        parent::__construct($registry, Owner::class);
+        return $this->manager
+            ->createQuery("SELECT id FROM Owner WHERE name = :name")
+            ->setParameter("name", $name)
+            ->getFirstResult()
+        ;
     }
 
-    public function save(Owner $entity, bool $flush = false): void
+    public function createOwnerWithFirstTamagotchi(string $ownerName, string $firstTamagotchi): int
     {
-        $this->getEntityManager()->persist($entity);
+        $this->manager
+            ->createQuery("INSERT INTO Owner VALUES (NULL, :name)")
+            ->setParameter('name', $ownerName)
+            ->execute()
+        ;
 
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
+        $ownerId = $this->manager->getConnection()->lastInsertId();
+
+        $this->manager
+            ->createQuery("INSERT INTO Tamagotchi (owner_id, name, first) VALUES (:owner, :name, true)")
+            ->setParameters(['owner' => $ownerId, 'name' => $firstTamagotchi])
+            ->execute()
+        ;
+
+        return $ownerId;
     }
-
-    public function remove(Owner $entity, bool $flush = false): void
-    {
-        $this->getEntityManager()->remove($entity);
-
-        if ($flush) {
-            $this->getEntityManager()->flush();
-        }
-    }
-
-//    /**
-//     * @return User[] Returns an array of User objects
-//     */
-//    public function findByExampleField($value): array
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->orderBy('u.id', 'ASC')
-//            ->setMaxResults(10)
-//            ->getQuery()
-//            ->getResult()
-//        ;
-//    }
-
-//    public function findOneBySomeField($value): ?User
-//    {
-//        return $this->createQueryBuilder('u')
-//            ->andWhere('u.exampleField = :val')
-//            ->setParameter('val', $value)
-//            ->getQuery()
-//            ->getOneOrNullResult()
-//        ;
-//    }
 }

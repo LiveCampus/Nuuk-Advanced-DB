@@ -48,4 +48,16 @@ class SessionService
         $session = $this->requestStack->getSession();
         $session->clear();
     }
+
+    /**
+     * Ajoute un message flash du type donné avec le message donné
+     *
+     * @param string $type
+     * @param string $message
+     * @return void
+     */
+    public function addFlash(string $type, string $message): void
+    {
+        $this->setSessionObject("flashes", [$type => $message]);
+    }
 }

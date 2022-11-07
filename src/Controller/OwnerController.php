@@ -27,24 +27,18 @@ class OwnerController extends AbstractController
     #[Route('/connecter', name: 'connect')]
     public function connect(Request $request): RedirectResponse
     {
-        $username = $request->get('owner');
+        $ownerName = $request->get('owner');
         $firstTamagotchi = $request->get('firstTamagotchi');
 
-        $user = $this->ownerService->existingUser($username);
+        $owner = $this->ownerService->existingOwner($ownerName);
 
-        if ($user) {
-            $tamagotchis = $user->getTamagotchis();
+        if ($owner) {
+            $isFirstTamagotchi = $this->ownerService->goodFirstTamagotchi($owner, $firstTamagotchi);
 
-            foreach ($tamagotchis as $tamagotchi) {
-                if ($firstTamagotchi == $tamagotchi->getName()) {
-                    $this->sessionService->setSessionObject('owner', $user->getId());
-
-                    return $this->redirectToRoute('app_home');
-                }
-            }
+            if ($isFirstTamagotchi) return $this->redirectToRoute('app_home');
         }
 
-        $this->sessionService->setSessionObject("flashes", ["error" => "Identifiant incorrect"]);
+        $this->sessionService->addFlash("error", "Identifiant incorrect");
         return $this->redirectToRoute('owner_login');
     }
 
@@ -57,17 +51,17 @@ class OwnerController extends AbstractController
     #[Route('/creer', name: 'create')]
     public function create(Request $request): RedirectResponse
     {
-        $username = $request->get('username');
+        $ownerName = $request->get('username');
         $firstTamagotchi = $request->get('firstTamagotchi');
 
-        if ($username && $firstTamagotchi) {
-            $user = $this->ownerService->createUser($username, $firstTamagotchi);
-            $this->sessionService->setSessionObject('user', $user);
+        if ($ownerName && $firstTamagotchi) {
+            $owner = $this->ownerService->createOwner($ownerName, $firstTamagotchi);
+            $this->sessionService->setSessionObject('owner', $owner);
 
             return $this->redirectToRoute('app_home');
         }
 
-        $this->sessionService->setSessionObject("flashes", ["error" => "Tous les champs sont obligatoires"]);
+        $this->sessionService->addFlash("error", "Tous les champs sont obligatoires");
         return $this->redirectToRoute('owner_signup');
     }
 
