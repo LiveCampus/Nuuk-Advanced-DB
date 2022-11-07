@@ -4,14 +4,14 @@ namespace App\Service;
 
 use App\Entity\Tamagotchi;
 use App\Entity\User;
-use App\Repository\UserRepository;
+use App\Repository\OwnerRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Uid\Uuid;
 
 class UserService
 {
     public function __construct(
-        private readonly UserRepository $userRepository,
+        private readonly OwnerRepository        $userRepository,
         private readonly EntityManagerInterface $manager
     ) {}
 
