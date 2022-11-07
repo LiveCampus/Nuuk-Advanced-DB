@@ -21,9 +21,9 @@ class HomeController extends AbstractController
     #[Route('/', name: 'app_home')]
     public function index(): RedirectResponse
     {
-        $user = $this->sessionService->getSessionObject('user');
+        $owner = $this->sessionService->getSessionObject('owner');
 
-        if ($user) return $this->redirectToRoute("tamagotchi_index", ["id" => $user->toBase58()]);
-        else return $this->redirectToRoute("user_login");
+        if ($owner) return $this->redirectToRoute("tamagotchi_index", ["id" => $owner]);
+        else return $this->redirectToRoute("owner_login");
     }
 }
