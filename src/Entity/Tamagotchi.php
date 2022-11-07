@@ -2,62 +2,24 @@
 
 namespace App\Entity;
 
-use App\Repository\TamagotchiRepository;
-use Doctrine\ORM\Mapping as ORM;
-use Symfony\Component\Uid\Uuid;
 
-#[ORM\Entity(repositoryClass: TamagotchiRepository::class)]
 class Tamagotchi
 {
-    #[ORM\Id]
-    #[ORM\Column(type: 'uuid', unique: true)]
-    #[ORM\GeneratedValue(strategy: 'CUSTOM')]
-    #[ORM\CustomIdGenerator(class: 'doctrine.uuid_generator')]
-    private ?Uuid $id = null;
-
-    #[ORM\Column(length: 255)]
+    private ?int $id = null;
     private ?string $name = null;
-
-    #[ORM\Column]
-    private ?int $hunger = 70;
-
-    #[ORM\Column]
-    private ?int $thirst = 70;
-
-    #[ORM\Column]
-    private ?int $sleep = 70;
-
-    #[ORM\Column]
-    private ?int $boredom = 70;
-
-    #[ORM\Column]
-    private ?bool $alive = true;
-
-    #[ORM\Column]
-    private ?int $level = 1;
-
-    #[ORM\Column]
-    private ?int $actions_count = 0;
-
-    #[ORM\Column]
-    private ?\DateTimeImmutable $createdAt;
-
-    #[ORM\Column(nullable: true)]
+    private ?int $hunger = null;
+    private ?int $thirst = null;
+    private ?int $sleep = null;
+    private ?int $boredom = null;
+    private ?bool $alive = null;
+    private ?int $level = null;
+    private ?int $actions_count = null;
+    private ?\DateTimeImmutable $createdAt = null;
     private ?\DateTimeImmutable $diedOn = null;
-
-    #[ORM\ManyToOne(inversedBy: 'tamagotchis')]
-    #[ORM\JoinColumn(nullable: false)]
-    private ?User $owner = null;
-
-    #[ORM\Column]
+    private ?Owner $owner = null;
     private ?bool $first = false;
 
-    public function __construct()
-    {
-        $this->createdAt = new \DateTimeImmutable(timezone: new \DateTimeZone("Europe/Paris"));
-    }
-
-    public function getId(): ?Uuid
+    public function getId(): ?int
     {
         return $this->id;
     }
@@ -182,12 +144,12 @@ class Tamagotchi
         return $this;
     }
 
-    public function getOwner(): ?User
+    public function getOwner(): ?Owner
     {
         return $this->owner;
     }
 
-    public function setOwner(?User $owner): self
+    public function setOwner(?Owner $owner): self
     {
         $this->owner = $owner;
 
