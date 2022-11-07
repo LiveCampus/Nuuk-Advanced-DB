@@ -26,6 +26,8 @@ class TamagotchiFixtures extends Fixture implements DependentFixtureInterface
                 $tamagotchi->setName($this->generator->firstName);
                 $tamagotchi->setOwner($this->getReference(self::USER_REFERENCE . $i));
 
+                if ($j == 0) $tamagotchi->setFirst(true);
+
                 $manager->persist($tamagotchi);
             }
         }

@@ -44,6 +44,7 @@ class UserService
         $tamagotchi
             ->setName($firstTamagotchi)
             ->setOwner($user)
+            ->setFirst(true)
         ;
 
         $this->manager->persist($user);

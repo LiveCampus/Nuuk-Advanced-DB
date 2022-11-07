@@ -49,6 +49,9 @@ class Tamagotchi
     #[ORM\JoinColumn(nullable: false)]
     private ?User $owner = null;
 
+    #[ORM\Column]
+    private ?bool $first = false;
+
     public function __construct()
     {
         $this->createdAt = new \DateTimeImmutable(timezone: new \DateTimeZone("Europe/Paris"));
@@ -304,5 +307,17 @@ class Tamagotchi
             $this->level ++;
             $this->actions_count = 0;
         }
+    }
+
+    public function isFirst(): ?bool
+    {
+        return $this->first;
+    }
+
+    public function setFirst(bool $first): self
+    {
+        $this->first = $first;
+
+        return $this;
     }
 }

@@ -139,7 +139,11 @@ class TamagotchiController extends AbstractController
     public function delete(Request $request,  User $user, Tamagotchi $tamagotchi): Response
     {
         if ($this->isCsrfTokenValid('delete'.$tamagotchi->getId(), $request->request->get('_token'))) {
-            $this->tamagotchiRepository->remove($tamagotchi, true);
+            if (!$tamagotchi->isFirst()) {
+                $this->tamagotchiRepository->remove($tamagotchi, true);
+            } else {
+                $this->sessionService->setSessionObject("flashes", ['error' => 'Impossible de supprimer votre premier tamagotchi']);
+            }
         }
 
         return $this->redirectToRoute('tamagotchi_index', ['id' => $user->getId()], Response::HTTP_SEE_OTHER);

@@ -445,6 +445,11 @@ input,
     color: var(--primary-color);
 }
 
+.card__name.first {
+    color: #ffa502;
+    text-decoration: underline;
+}
+
 .card__informations {
     display: grid;
     grid-template-columns: 1fr 1fr;
