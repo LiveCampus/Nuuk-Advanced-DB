@@ -13,7 +13,7 @@
                 {{ form_widget(form.name, {'attr': {'class': 'form__input'}}) }}
             </div>
             <button type="submit" class="form__submit">Modifier</button>
-            <a href="{{ path('tamagotchi_index', {'id': user.id.toBase58}) }}" class="form__cancel">Retournez à la liste</a>
+            <a href="{{ path('tamagotchi_index', {'ownerId': owner}) }}" class="form__cancel">Retournez à la liste</a>
         {{ form_end(form) }}
     </div>
 {% endblock %}

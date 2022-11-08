@@ -6,7 +6,7 @@
     <div class="container">
         <div class="header">
             <h1 class="title">Liste de mes tamagotchis</h1>
-            <a href="{{ path('tamagotchi_new', {'id': user.id.toBase58}) }}" class="add">
+            <a href="{{ path('tamagotchi_new', {'ownerId': owner}) }}" class="add">
                 <span class="add__icon">
                     <i class="fa-solid fa-plus"></i>
                 </span>
@@ -16,42 +16,46 @@
         <hr class="separation">
 
         <div class="grid">
-            {% for tamagotchi in tamagotchis %}
-                <div onclick="window.location = '{{ path('tamagotchi_show', {'id': user.id.toBase58, 'name': tamagotchi.name}) }}'" class="card">
-                    <div class="card__header">
-                        <a href="{{ path('tamagotchi_edit', {'id': user.id.toBase58, 'name': tamagotchi.name}) }}" class="card__edit">
+            {% if tamagotchis is not empty %}
+                {% for tamagotchi in tamagotchis %}
+                    <div onclick="window.location = '{{ path('tamagotchi_show', {'ownerId': owner, 'id': tamagotchi.id, 'name': tamagotchi.name}) }}'" class="card">
+                        <div class="card__header">
+                            <a href="{{ path('tamagotchi_edit', {'ownerId': owner, 'id': tamagotchi.id, 'name': tamagotchi.name}) }}" class="card__edit">
                             <span class="edit__icon">
                                 <i class="fa-solid fa-pen"></i>
                             </span>
-                        </a>
-                        <img src="{{ asset('assets/images/tamagotchi.png') }}" alt="Tamagotchi" class="card__img">
+                            </a>
+                            <img src="{{ asset('assets/images/tamagotchi.png') }}" alt="Tamagotchi" class="card__img">
+                        </div>
+                        <div class="card__body">
+                            <h2 class="card__name {{ tamagotchi.first ? "first" : "" }}">{{ tamagotchi.name }}</h2>
+                            <ul class="card__informations">
+                                <li class="card__statistic {{ tamagotchi.hunger < 30 ? "warning" : '' }}">
+                                    <i class="fa-solid fa-drumstick-bite"></i>
+                                    {{ tamagotchi.hunger }}
+                                </li>
+                                <li class="card__statistic {{ tamagotchi.thirst < 30 ? "warning" : '' }}">
+                                    <i class="fa-solid fa-droplet"></i>
+                                    {{ tamagotchi.thirst }}
+                                </li>
+                                <li class="card__statistic {{ tamagotchi.sleep < 30 ? "warning" : '' }}">
+                                    <i class="fa-solid fa-bed"></i>
+                                    {{ tamagotchi.sleep }}
+                                </li>
+                                <li class="card__statistic {{ tamagotchi.boredom < 30 ? "warning" : '' }}">
+                                    <i class="fa-solid fa-football"></i>
+                                    {{ tamagotchi.boredom }}
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="card__body">
-                        <h2 class="card__name {{ tamagotchi.first ? "first" : "" }}">{{ tamagotchi.name }}</h2>
-                        <ul class="card__informations">
-                            <li class="card__statistic {{ tamagotchi.hunger < 30 ? "warning" : '' }}">
-                                <i class="fa-solid fa-drumstick-bite"></i>
-                                {{ tamagotchi.hunger }}
-                            </li>
-                            <li class="card__statistic {{ tamagotchi.thirst < 30 ? "warning" : '' }}">
-                                <i class="fa-solid fa-droplet"></i>
-                                {{ tamagotchi.thirst }}
-                            </li>
-                            <li class="card__statistic {{ tamagotchi.sleep < 30 ? "warning" : '' }}">
-                                <i class="fa-solid fa-bed"></i>
-                                {{ tamagotchi.sleep }}
-                            </li>
-                            <li class="card__statistic {{ tamagotchi.boredom < 30 ? "warning" : '' }}">
-                                <i class="fa-solid fa-football"></i>
-                                {{ tamagotchi.boredom }}
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            {% endfor %}
+                {% endfor %}
+            {% else %}
+                <h3>Tous vos tamagotchis sont mort :'(</h3>
+            {% endif %}
         </div>
 
-        <a href="{{ path('tamagotchi_cemetery', {'id': user.id.toBase58}) }}" class="cemetery">
+        <a href="{{ path('tamagotchi_cemetery', {'ownerId': owner}) }}" class="cemetery">
             <span class="cemetery__icon">
                 <i class="fa-solid fa-skull"></i>
             </span>

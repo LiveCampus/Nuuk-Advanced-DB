@@ -2,12 +2,11 @@
 
 namespace App\Controller;
 
-use App\Entity\Tamagotchi;
-use App\Form\TamagotchiType;
 use App\Repository\TamagotchiRepository;
 use App\Service\SessionService;
-use Sensio\Bundle\FrameworkExtraBundle\Configuration\ParamConverter;
+use Doctrine\DBAL\Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\Form\Extension\Core\Type\TextType;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -22,146 +21,210 @@ class TamagotchiController extends AbstractController
     )
     {}
 
+    /**
+     * @throws Exception
+     */
     #[Route('/{ownerId}', name: 'index', methods: ['GET'])]
     public function index(int $ownerId): Response
     {
-        $tamagotchis = $this->tamagotchiRepository->findAliveTamagotchis($ownerId);
-        dd($tamagotchis);
         return $this->render('tamagotchi/index.html.twig', [
             'owner' => $ownerId,
-            'tamagotchis' => $tamagotchis
+            'tamagotchis' => $this->tamagotchiRepository->findAliveTamagotchis($ownerId)
         ]);
     }
 
     #[Route('/{ownerId}/new', name: 'new', methods: ['GET', 'POST'])]
-    public function new(Request $request, int $ownerId): Response
+    public function new(int $ownerId, Request $request): Response
     {
-        $tamagotchi = new Tamagotchi();
-        $form = $this->createForm(TamagotchiType::class, $tamagotchi);
+        $form = $this->createFormBuilder()
+            ->add('name', TextType::class, [
+                'required' => true,
+                'label' => "Son nom"
+            ])
+            ->getForm()
+        ;
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $tamagotchi->setOwner($ownerId);
-            $this->tamagotchiRepository->save($tamagotchi, true);
+            try {
+                $this->tamagotchiRepository->createTamagotchi($ownerId, $form->getData()["name"]);
+            } catch (Exception) {
+                $this->sessionService->addFlash("error", "Échec lors de la création de votre tamagotchi... Réessayez ultérieurement");
+                return $this->redirectToRoute('tamagotchi_index', ["ownerId" => $ownerId]);
+            }
 
-            return $this->redirectToRoute('tamagotchi_index', ['id' => $ownerId], Response::HTTP_SEE_OTHER);
+            $this->sessionService->addFlash("success", "Votre tamagotchi a été crée avec succès");
+            return $this->redirectToRoute('tamagotchi_index', ['ownerId' => $ownerId], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('tamagotchi/new.html.twig', [
-            'user' => $ownerId,
-            'tamagotchi' => $tamagotchi,
+            'owner' => $ownerId,
             'form' => $form,
         ]);
     }
 
+    /**
+     * @throws Exception
+     */
     #[Route('/{ownerId}/cimetière', name: 'cemetery', methods: ['GET'])]
     public function cemetery(int $ownerId): Response
     {
 
         return $this->render('tamagotchi/cemetery.html.twig', [
-            'user' => $ownerId,
+            'owner' => $ownerId,
             'tamagotchis' => $this->tamagotchiRepository->findDeadTamagotchis($ownerId)
         ]);
     }
 
-    #[Route('/{ownerId}/{name}', name: 'show', methods: ['GET'])]
-    public function show(int $ownerId, string $name): Response
+    #[Route('/{ownerId}/{id}-{name}', name: 'show', methods: ['GET'])]
+    public function show(int $ownerId, int $id, string $name): Response
     {
-        if (!$tamagotchi->isAlive()) return $this->redirectToRoute('tamagotchi_cemetery', ['id' => $user->getId()->toBase58()]);
+        try {
+            $tamagotchi = $this->tamagotchiRepository->findOneById($id, $ownerId);
+        } catch (Exception) {
+            $this->sessionService->addFlash('error', "Impossible de récupérer les informations du tamagotchi... Réessayez ultérieurement");
+            return $this->redirectToRoute('tamagotchi_index', ['ownerId' => $ownerId]);
+        }
+
+        if (!$tamagotchi['alive']) return $this->redirectToRoute('tamagotchi_cemetery', ['ownerId' => $ownerId]);
 
         return $this->render('tamagotchi/show.html.twig', [
-            'user' => $ownerId,
+            'owner' => $ownerId,
             'tamagotchi' => $tamagotchi,
         ]);
     }
 
-    #[Route('/{ownerId}/{name}/manger', name: 'eat', methods: ['GET'])]
-    public function eat(int $ownerId, string $name): RedirectResponse
+    #[Route('/{ownerId}/{id}-{name}/manger', name: 'eat', methods: ['GET'])]
+    public function eat(int $ownerId, int $id, string $name): RedirectResponse
     {
-        $this->tryAction($tamagotchi, "eat");
-        return $this->redirectToRoute('tamagotchi_show', ["id" => $user->getId()->toBase58(), "name" => $tamagotchi->getName()]);
+        try {
+            $this->tryAction($id, $ownerId, "eat");
+        } catch (Exception) {
+            $this->sessionService->addFlash("error", "Impossible de l'action... Réessayez ultérieurement");
+        }
+
+        return $this->redirectToRoute('tamagotchi_show', ["ownerId" => $ownerId, "id" => $id, "name" => $name]);
     }
 
-    #[Route('/{id}/{name}/boire', name: 'drink', methods: ['GET'])]
-    public function drink(User $user, Tamagotchi $tamagotchi): RedirectResponse
+    #[Route('/{ownerId}/{id}-{name}/boire', name: 'drink', methods: ['GET'])]
+    public function drink(int $ownerId, int $id, string $name): RedirectResponse
     {
-        $this->tryAction($tamagotchi, "drink");
-        return $this->redirectToRoute('tamagotchi_show', ["id" => $user->getId()->toBase58(), "name" => $tamagotchi->getName()]);
+        try {
+            $this->tryAction($id, $ownerId, "drink");
+        } catch (Exception) {
+            $this->sessionService->addFlash("error", "Impossible de l'action... Réessayez ultérieurement");
+        }
+
+        return $this->redirectToRoute('tamagotchi_show', ["ownerId" => $ownerId, "id" => $id, "name" => $name]);
     }
 
-    #[Route('/{id}/{name}/dormir', name: 'sleep', methods: ['GET'])]
-    public function sleep(User $user, Tamagotchi $tamagotchi): RedirectResponse
+    #[Route('/{ownerId}/{id}-{name}/dormir', name: 'sleep', methods: ['GET'])]
+    public function sleep(int $ownerId, int $id, string $name): RedirectResponse
     {
-        $this->tryAction($tamagotchi, "sleep");
-        return $this->redirectToRoute('tamagotchi_show', ["id" => $user->getId()->toBase58(), "name" => $tamagotchi->getName()]);
+        try {
+            $this->tryAction($id, $ownerId, "sleep");
+        } catch (Exception) {
+            $this->sessionService->addFlash("error", "Impossible de l'action... Réessayez ultérieurement");
+        }
+
+        return $this->redirectToRoute('tamagotchi_show', ["ownerId" => $ownerId, "id" => $id, "name" => $name]);
     }
 
-    #[Route('/{id}/{name}/jouer', name: 'play', methods: ['GET'])]
-    public function play(User $user, Tamagotchi $tamagotchi): RedirectResponse
+    #[Route('/{ownerId}/{id}-{name}/jouer', name: 'play', methods: ['GET'])]
+    public function play(int $ownerId, int $id, string $name): RedirectResponse
     {
-        $this->tryAction($tamagotchi, "play");
-        return $this->redirectToRoute('tamagotchi_show', ["id" => $user->getId()->toBase58(), "name" => $tamagotchi->getName()]);
+        try {
+            $this->tryAction($id, $ownerId, "play");
+        } catch (Exception) {
+            $this->sessionService->addFlash("error", "Impossible de l'action... Réessayez ultérieurement");
+        }
+
+        return $this->redirectToRoute('tamagotchi_show', ["ownerId" => $ownerId, "id" => $id, "name" => $name]);
     }
 
-    #[Route('/{id}/{name}/edit', name: 'edit', methods: ['GET', 'POST'])]
-    public function edit(Request $request,  User $user, Tamagotchi $tamagotchi): Response
+    #[Route('/{ownerId}/{id}-{name}/modification', name: 'edit', methods: ['GET', 'POST'])]
+    public function edit(int $ownerId, int $id, string $name, Request $request): Response
     {
-        $form = $this->createForm(TamagotchiType::class, $tamagotchi);
+        $form = $this->createFormBuilder(["name" => $name])
+            ->add('name', TextType::class, [
+                'required' => true,
+                'label' => "Son nom"
+            ])
+            ->getForm()
+        ;
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->tamagotchiRepository->save($tamagotchi, true);
+            try {
+                $this->tamagotchiRepository->updateTamagotchi($id, $form->getData()["name"], $ownerId);
+            } catch (Exception) {
+                $this->sessionService->addFlash("error", "Impossible de modifier votre tamagotchi... Réessayez ultérieurement");
+                return $this->redirectToRoute('tamagotchi_index', ["ownerId" => $ownerId]);
+            }
 
-            return $this->redirectToRoute('tamagotchi_index', ['id' => $user->getId()], Response::HTTP_SEE_OTHER);
+            $this->sessionService->addFlash("success", "Tamagotchi modifié avec succès");
+            return $this->redirectToRoute('tamagotchi_index', ['ownerId' => $ownerId], Response::HTTP_SEE_OTHER);
         }
 
         return $this->renderForm('tamagotchi/edit.html.twig', [
-            'user' => $user,
-            'tamagotchi' => $tamagotchi,
+            'owner' => $ownerId,
             'form' => $form,
         ]);
     }
 
-    #[Route('/{ownerId}/{name}', name: 'delete', methods: ['POST'])]
-    public function delete(Request $request,  int $ownerId, string $name): Response
+    #[Route('/{ownerId}/{id}', name: 'delete', methods: ['POST'])]
+    public function delete(int $ownerId, int $id, Request $request): Response
     {
-        if ($this->isCsrfTokenValid('delete'.$tamagotchi->getId(), $request->request->get('_token'))) {
-            if (!$tamagotchi->isFirst()) {
-                $this->tamagotchiRepository->remove($tamagotchi, true);
+        if ($this->isCsrfTokenValid('delete'.$id, $request->request->get('_token'))) {
+            try {
+                $tamagotchi = $this->tamagotchiRepository->findOneById($id, $ownerId);
+            } catch (Exception) {
+                $this->sessionService->addFlash("error", "Impossible de trouver votre tamagotchi");
+                return $this->redirectToRoute('tamagotchi_index', ["ownerId" => $ownerId]);
+            }
+
+
+            if (!$tamagotchi["first"]) {
+                try {
+                    $this->tamagotchiRepository->removeTamagotchi($id, $ownerId);
+                } catch (Exception) {
+                    $this->sessionService->setSessionObject("flashes", ['error' => 'Impossible de supprimer votre tamagotchi... Réessayez ultérieurement']);
+                }
             } else {
                 $this->sessionService->setSessionObject("flashes", ['error' => 'Impossible de supprimer votre premier tamagotchi']);
             }
         }
 
-        return $this->redirectToRoute('tamagotchi_index', ['id' => $user->getId()], Response::HTTP_SEE_OTHER);
+        return $this->redirectToRoute('tamagotchi_index', ['ownerId' => $ownerId], Response::HTTP_SEE_OTHER);
     }
 
-    private function tryAction(Tamagotchi $tamagotchi, string $action)
+    /**
+     * @throws Exception
+     */
+    private function tryAction(int $id, int $ownerId, string $action)
     {
         switch ($action) {
             case "eat":
-                $action = $tamagotchi->eat();
+                $action = $this->tamagotchiRepository->eat($id, $ownerId);
                 break;
             case "drink":
-                $action = $tamagotchi->drink();
+                $action = $this->tamagotchiRepository->drink($id, $ownerId);
                 break;
             case "sleep":
-                $action = $tamagotchi->goSleep();
+                $action = $this->tamagotchiRepository->sleep($id, $ownerId);
                 break;
             case "play":
-                $action = $tamagotchi->play();
+                $action = $this->tamagotchiRepository->play($id, $ownerId);
                 break;
         }
 
+        $tamagotchi = $this->tamagotchiRepository->findOneById($id, $ownerId);
+
         if ($action) {
-            if ($tamagotchi->getHunger() == 0 || $tamagotchi->getThirst() == 0 || $tamagotchi->getSleep() == 0 || $tamagotchi->getBoredom() == 0) {
-                $tamagotchi
-                    ->setAlive(false)
-                    ->setDiedOn(new \DateTimeImmutable("now", new \DateTimeZone("Europe/Paris")))
-                ;
+            if ($tamagotchi["hunger"] == 0 || $tamagotchi["thirst"] == 0 || $tamagotchi["sleep"] == 0 || $tamagotchi["boredom"] == 0) {
+                $this->tamagotchiRepository->killTamagotchi($id, $ownerId);
                 $this->sessionService->setSessionObject("flashes", ["error" => "Votre tamagotchis est mort"]);
             }
-            $this->tamagotchiRepository->save($tamagotchi, true);
         } else {
             $this->sessionService->setSessionObject("flashes", ["error" => "Impossible de faire cette action"]);
         }

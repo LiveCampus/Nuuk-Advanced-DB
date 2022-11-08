@@ -13,7 +13,7 @@
             </li>
         {% else %}
             <li class="nav__item">
-                <a href="{{ path('tamagotchi_index', {id: app.session.get('owner')}) }}" class="nav__link">Mes tamagotchis</a>
+                <a href="{{ path('tamagotchi_index', {'ownerId': app.session.get('owner')}) }}" class="nav__link">Mes tamagotchis</a>
             </li>
             <li class="nav__item">
                 <a href="{{ path('owner_logout') }}" class="nav__link">Se déconnecter</a>

@@ -23,7 +23,7 @@ class HomeController extends AbstractController
     {
         $owner = $this->sessionService->getSessionObject('owner');
 
-        if ($owner) return $this->redirectToRoute("tamagotchi_index", ["id" => $owner]);
+        if ($owner) return $this->redirectToRoute("tamagotchi_index", ["ownerId" => $owner]);
         else return $this->redirectToRoute("owner_login");
     }
 }

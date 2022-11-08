@@ -6,6 +6,7 @@
     /* Color */
     --primary-color: #ff9897;
     --warning-color: #ff4757;
+    --success-color: #7bed9f;
     --text-color: #2f3542;
     --bg-color: #f1f2f6;
     --bg-color-dark: #dfe4ea;
@@ -375,6 +376,11 @@ input,
 
 .flash--error {
     background-color: var(--warning-color);
+    color: white;
+}
+
+.flash--success {
+    background-color: var(--success-color);
     color: white;
 }
 
