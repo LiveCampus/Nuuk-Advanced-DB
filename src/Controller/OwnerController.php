@@ -2,8 +2,10 @@
 
 namespace App\Controller;
 
+use App\Repository\OwnerRepository;
+use App\Repository\TamagotchiRepository;
 use App\Service\SessionService;
-use App\Service\OwnerService;
+use Doctrine\DBAL\Exception;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -14,8 +16,9 @@ use Symfony\Component\Routing\Annotation\Route;
 class OwnerController extends AbstractController
 {
     public function __construct(
-        private readonly OwnerService   $ownerService,
-        private readonly SessionService $sessionService
+        private readonly SessionService         $sessionService,
+        private readonly OwnerRepository        $ownerRepository,
+        private readonly TamagotchiRepository   $tamagotchiRepository,
     ) {}
 
     #[Route('/connexion', name: 'login')]
@@ -30,12 +33,25 @@ class OwnerController extends AbstractController
         $ownerName = $request->get('owner');
         $firstTamagotchi = $request->get('firstTamagotchi');
 
-        $owner = $this->ownerService->existingOwner($ownerName);
+        try {
+            $owner = $this->ownerRepository->getIdByName($ownerName);
+        } catch (Exception) {
+            $this->sessionService->addFlash("error", "Une erreur est survenu... Réessayer ultérieurement");
+            return $this->redirectToRoute('owner_login');
+        }
 
         if ($owner) {
-            $isFirstTamagotchi = $this->ownerService->goodFirstTamagotchi($owner, $firstTamagotchi);
+            try {
+                $isFirstTamagotchi = (bool)$this->tamagotchiRepository->findFirstTamagotchiByName($owner, $firstTamagotchi);
+            } catch (Exception) {
+                $this->sessionService->addFlash("error", "Une erreur est survenu... Réessayer ultérieurement");
+                return $this->redirectToRoute('owner_login');
+            }
 
-            if ($isFirstTamagotchi) return $this->redirectToRoute('app_home');
+            if ($isFirstTamagotchi) {
+                $this->sessionService->setSessionObject('owner', $owner);
+                return $this->redirectToRoute('app_home');
+            }
         }
 
         $this->sessionService->addFlash("error", "Identifiant incorrect");
@@ -55,9 +71,14 @@ class OwnerController extends AbstractController
         $firstTamagotchi = $request->get('firstTamagotchi');
 
         if ($ownerName && $firstTamagotchi) {
-            $owner = $this->ownerService->createOwner($ownerName, $firstTamagotchi);
-            $this->sessionService->setSessionObject('owner', $owner);
+            try {
+                $owner = $this->ownerRepository->createOwnerWithFirstTamagotchi($ownerName, $firstTamagotchi);
+            } catch (Exception) {
+                $this->sessionService->addFlash("error", "Une erreur est survenue... Réessayer ultérieurement");
+                return $this->redirectToRoute('owner_signup');
+            }
 
+            $this->sessionService->setSessionObject('owner', $owner);
             return $this->redirectToRoute('app_home');
         }
 
