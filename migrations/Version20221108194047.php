@@ -15,58 +15,57 @@ final class Version20221108194047 extends AbstractMigration
     }
 
     public function up(Schema $schema): void
-    {
-        $difficulty = self::NORMAL;
-        
+    {        
         // Procédure pour créer un utilisateur et son premier tamagotchi
-        $this->addSql("CREATE PROCEDURE CREATE_ACCOUNT(IN username VARCHAR(255), tamagotchiName VARCHAR(255))
+        $this->addSql(
+            "CREATE PROCEDURE create_account(username VARCHAR(255), tamagotchiName VARCHAR(255))
             BEGIN
-                DECLARE idOwner VARCHAR(255)
+                DECLARE idOwner VARCHAR(255);
 
-                INSERT INTO Owner (name) VALUES (username)
+                INSERT INTO Owner (name) VALUES (username);
                 SELECT id INTO idOwner
                 FROM Owner
                 WHERE name = username;
-                INSERT INTO Tamagotchi (owner_id, name, first) VALUES (idOwner, tamagocthiName, 1)
-            END
+                INSERT INTO Tamagotchi (owner_id, name, first) VALUES (idOwner, tamagocthiName, 1);
+            END;
         ");
 
         // Procédure pour créer un tamagotchi d'un utilisateur existant
-        $this->addSql("CREATE PROCEDURE CREATE_TAMAGOCHI(IN tamagotchiName VARCHAR(255), ownerId VARCHAR(255))
+        $this->addSql("CREATE PROCEDURE create_tamagotchi(IN tamagotchiName VARCHAR(255), ownerId VARCHAR(255))
             BEGIN
-                INSERT INTO Tamagotchi (owner_id, name) VALUES (ownerID, tamagotchiName)
-            END
+                INSERT INTO tamagotchi (owner_id, name) VALUES (ownerID, tamagotchiName);
+            END;
         ");
 
         //Procédures pour créer une ligne dans la table action
 
         //Eat
-        $this->addSql("CREATE PROCEDURE EAT(IN tamagotchiId INT)
+        $this->addSql("CREATE PROCEDURE eat(IN tamagotchiId INT)
             BEGIN
-                INSERT INTO Action (id_tamagotchi, title) VALUES (tamagotchiId, \"Eat\")
-            END
+                INSERT INTO Action (id_tamagotchi, title) VALUES (tamagotchiId, \"Eat\");
+            END;
         ");
         //Drink
-        $this->addSql("CREATE PROCEDURE DRINK(IN tamagotchiId INT)
+        $this->addSql("CREATE PROCEDURE drink(IN tamagotchiId INT)
             BEGIN
-                INSERT INTO Action (id_tamagotchi, title) VALUES (tamagotchiId, \"Drink\")
-            END
+                INSERT INTO Action (id_tamagotchi, title) VALUES (tamagotchiId, \"Drink\");
+            END;
         ");
         //Bedtime
-        $this->addSql("CREATE PROCEDURE BEDTIME(IN tamagotchiId INT)
+        $this->addSql("CREATE PROCEDURE bedtime(IN tamagotchiId INT)
             BEGIN
-                INSERT INTO Action (id_tamagotchi, title) VALUES (tamagotchiId, \"Bedtime\")
-            END
+                INSERT INTO Action (id_tamagotchi, title) VALUES (tamagotchiId, \"Bedtime\");
+            END;
         ");
         //Enjoy
-        $this->addSql("CREATE PROCEDURE ENJOY(IN tamagotchiId INT)
+        $this->addSql("CREATE PROCEDURE enjoy(IN tamagotchiId INT)
             BEGIN
-                INSERT INTO Action (id_tamagotchi, title) VALUES (tamagotchiId, \"Enjoy\")
-            END
+                INSERT INTO Action (id_tamagotchi, title) VALUES (tamagotchiId, \"Enjoy\");
+            END;
         ");
 
         //Fonctions qui retourne le niveau du tamagotchi
-        $this->addSql("CREATE FUNCTION LEVEL(tamagotchiId INT)
+        $this->addSql("CREATE FUNCTION level(tamagotchiId INT)
             RETURNS INT NOT DETERMINISTIC
             READS SQL DATA
             BEGIN
@@ -77,11 +76,11 @@ final class Version20221108194047 extends AbstractMigration
                 WHERE id = tamagotchiId;
 
                 RETURN lvl;
-            END
+            END;
         ");
 
         //Fonctions qui retourne l'état de santé du tamagotchi
-        $this->addSql("CREATE FUNCTION IS_ALIVE(tamagotchiId INT)
+        $this->addSql("CREATE FUNCTION is_alive(tamagotchiId INT)
             RETURNS INT NOT DETERMINISTIC
             READS SQL DATA
             BEGIN
@@ -92,29 +91,37 @@ final class Version20221108194047 extends AbstractMigration
                 WHERE id = tamagotchiId;
 
                 RETURN health;
-            END
+            END;
         ");
 
         //Trigger qui change les valeurs du tamagotchi
-        $this->addSql("CREATE OR REPLACE TRIGGER action AFTER INSERT ON Action
-
-            SELECT A.id, A.id_tamagotchi, A.title, T.hunger, T.thirst, T.sleep, T.boredom, T.level
-            FROM Action A
-            JOIN Tamagotchi T ON A.id_tamagotchi = T.id
-            WHERE A.id = MAX(A.id);
-            CASE title
-                WHEN \"Eat\" THEN 
-                    UPDATE Tamagotchi SET T.hunger = MIN(T.hunger + T.level + 30, 100), T.drink = MAX(T.thirst - T.level + 10, 0), T.sleep = MAX(T.sleep - T.level + 5, 0), T.boredom = MAX(T.boredom - T.level + 5, 0) 
-                    WHERE T.id = A.id_tamagotchi
-                WHEN \"Drink\" THEN 
-                    UPDATE Tamagotchi SET T.hunger = MAX(T.hunger - T.level + 10, 0), T.drink = MIN(T.thirst + T.level + 30, 100), T.sleep = MAX(T.sleep - T.level + 5, 0), T.boredom = MAX(T.boredom - T.level + 5, 0) 
-                    WHERE T.id = A.id_tamagotchi
-                WHEN \"Bedtime\" THEN 
-                    UPDATE Tamagotchi SET T.hunger = MAX(T.hunger - T.level + 10, 0), T.drink = MAX(T.thirst - T.level + 15, 0), T.sleep = MIN(T.sleep + T.level + 30, 100), T.boredom = MAX(T.boredom - T.level + 15, 0) 
-                    WHERE T.id = A.id_tamagotchi
-                WHEN \"Enjoy\" THEN 
-                    UPDATE Tamagotchi SET T.hunger = MAX(T.hunger + T.level + 5, 0), T.drink = MAX(T.thirst - T.level + 5, 0), T.sleep = MAX(T.sleep - T.level + 5, 0), T.boredom = MIN(T.boredom + T.level + 15, 100) 
-                    WHERE T.id = A.id_tamagotchi
+        $this->addSql("CREATE TRIGGER eat AFTER INSERT ON Action
+        FOR EACH ROW
+            UPDATE Tamagotchi SET hunger = IF(hunger + level + 30 > 100, 100, hunger + level + 30), thirst = IF(thirst - (level + 10) < 0, 0, thirst - (level + 10)), sleep = IF(sleep - (level + 5) < 0, 0, sleep - (level + 5)), boredom = IF(boredom - (level + 5) < 0, 0, boredom - (level + 5))
+            WHERE id = (SELECT id_tamagotchi 
+            FROM Action  
+            WHERE title = \"Eat\" AND id =(SELECT MAX(id) FROM action));
+        ");
+        $this->addSql("CREATE TRIGGER drink AFTER INSERT ON Action
+        FOR EACH ROW
+            UPDATE Tamagotchi SET hunger = IF(hunger - (level + 10) < 0, 0, hunger - (level + 10)), thirst = IF(thirst + level + 30 > 100, 100, thirst + level + 10), sleep = IF(sleep - (level + 5) < 0, 0, sleep - (level + 5)), boredom = IF(boredom - (level + 5) < 0, 0, boredom - (level + 5))
+            WHERE id = (SELECT id_tamagotchi 
+            FROM Action  
+            WHERE title = \"Drink\" AND id =(SELECT MAX(id) FROM action));
+        ");
+        $this->addSql("CREATE TRIGGER sleep AFTER INSERT ON Action
+        FOR EACH ROW
+            UPDATE Tamagotchi SET hunger = IF(hunger - (level + 10) < 0, 0, hunger - (level + 10)), thirst = IF(thirst - (level + 15) < 0, 0, thirst - (level + 15)), sleep = IF(sleep + level + 30 > 100, 100, sleep + level + 30), boredom = IF(boredom - (level + 15) < 0, 0, boredom - (level + 15))
+            WHERE id = (SELECT id_tamagotchi 
+            FROM Action  
+            WHERE title = \"Bedtime\" AND id =(SELECT MAX(id) FROM action));
+        ");
+        $this->addSql("CREATE TRIGGER enjoy AFTER INSERT ON Action
+        FOR EACH ROW
+            UPDATE Tamagotchi SET hunger = IF(hunger - (level + 5) < 0, 0, hunger - (level + 5)), thirst = IF(thirst - (level + 5) < 0, 0, thirst - (level + 5)), sleep = IF(sleep - (level + 5) < 0, 0, sleep - (level + 5)), boredom = IF(boredom + level + 15 > 100, 100, boredom + level + 15)
+            WHERE id = (SELECT id_tamagotchi 
+            FROM Action  
+            WHERE title = \"Enjoy\" AND id =(SELECT MAX(id) FROM action));
         ");
     }
 

@@ -109,14 +109,9 @@ class TamagotchiRepository
     {
         $tamagotchi = $this->findOneById($id, $ownerId);
 
-        $newHunger = min($tamagotchi["hunger"] + $tamagotchi["level"] + 30, 100);
-        $newThirst = max($tamagotchi["thirst"] - ($tamagotchi["level"] + 10), 0);
-        $newSleep = max($tamagotchi["sleep"] - ($tamagotchi["level"] + 5), 0);
-        $newBoredom = max($tamagotchi["boredom"] - ($tamagotchi["level"] + 5), 0);
-
         if ($tamagotchi["hunger"] < 80) {
             $this->manager->getConnection()
-                ->prepare("CALL EAT(:id)")
+                ->prepare("CALL eat(:id)")
                 ->executeQuery(["id" => $id])
             ;
             $this->addAction($id, $ownerId);
@@ -134,22 +129,10 @@ class TamagotchiRepository
     {
         $tamagotchi = $this->findOneById($id, $ownerId);
 
-        $newThirst = min($tamagotchi["thirst"] + $tamagotchi["level"] + 30, 100);
-        $newHunger = max($tamagotchi["hunger"] - ($tamagotchi["level"] + 10), 0);
-        $newSleep = max($tamagotchi["sleep"] - ($tamagotchi["level"] + 5), 0);
-        $newBoredom = max($tamagotchi["boredom"] - ($tamagotchi["level"] + 5), 0);
-
         if ($tamagotchi["thirst"] < 80) {
             $this->manager->getConnection()
-                ->prepare("UPDATE Tamagotchi SET hunger = :hunger, thirst = :thirst, sleep = :sleep, boredom = :boredom WHERE id = :id AND owner_id = :owner")
-                ->executeQuery([
-                    "hunger" => $newHunger,
-                    "thirst" => $newThirst,
-                    "sleep" => $newSleep,
-                    "boredom" => $newBoredom,
-                    "id" => $id,
-                    'owner' => $ownerId
-                ])
+                ->prepare("CALL drink(:id)")
+                ->executeQuery(["id" => $id])
             ;
             $this->addAction($id, $ownerId);
 
@@ -166,22 +149,10 @@ class TamagotchiRepository
     {
         $tamagotchi = $this->findOneById($id, $ownerId);
 
-        $newSleep = min($tamagotchi["sleep"] + $tamagotchi["level"] + 30, 100);
-        $newHunger = max($tamagotchi["hunger"] - ($tamagotchi["level"] + 10), 0);
-        $newThirst = max($tamagotchi["thirst"] - ($tamagotchi["level"] + 15), 0);
-        $newBoredom = max($tamagotchi["boredom"] - ($tamagotchi["level"] + 15), 0);
-
         if ($tamagotchi["sleep"] < 80) {
             $this->manager->getConnection()
-                ->prepare("UPDATE Tamagotchi SET hunger = :hunger, thirst = :thirst, sleep = :sleep, boredom = :boredom WHERE id = :id AND owner_id = :owner")
-                ->executeQuery([
-                    "hunger" => $newHunger,
-                    "thirst" => $newThirst,
-                    "sleep" => $newSleep,
-                    "boredom" => $newBoredom,
-                    "id" => $id,
-                    'owner' => $ownerId
-                ])
+                ->prepare("CALL bedtime(:id)")
+                ->executeQuery(["id" => $id])
             ;
             $this->addAction($id, $ownerId);
 
@@ -198,22 +169,10 @@ class TamagotchiRepository
     {
         $tamagotchi = $this->findOneById($id, $ownerId);
 
-        $newBoredom = min($tamagotchi["boredom"] + $tamagotchi["level"] + 15, 100);
-        $newHunger = max($tamagotchi["hunger"] - ($tamagotchi["level"] + 5), 0);
-        $newThirst = max($tamagotchi["thirst"] - ($tamagotchi["level"] + 5), 0);
-        $newSleep = max($tamagotchi["sleep"] - ($tamagotchi["level"] + 5), 0);
-
         if ($tamagotchi["boredom"] < 80) {
             $this->manager->getConnection()
-                ->prepare("UPDATE Tamagotchi SET hunger = :hunger, thirst = :thirst, sleep = :sleep, boredom = :boredom WHERE id = :id AND owner_id = :owner")
-                ->executeQuery([
-                    "hunger" => $newHunger,
-                    "thirst" => $newThirst,
-                    "sleep" => $newSleep,
-                    "boredom" => $newBoredom,
-                    "id" => $id,
-                    'owner' => $ownerId
-                ])
+                ->prepare("CALL enjoy(:id)")
+                ->executeQuery(["id" => $id])
             ;
             $this->addAction($id, $ownerId);
 
