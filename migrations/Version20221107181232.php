@@ -29,7 +29,8 @@ final class Version20221107181232 extends AbstractMigration
        )");
         $this->addSql("CREATE TABLE Tamagotchi (
             id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY, 
-            owner_id INT UNSIGNED NOT NULL, name VARCHAR(255) NOT NULL, 
+            owner_id INT UNSIGNED NOT NULL, 
+            name VARCHAR(255) NOT NULL, 
             hunger INT NOT NULL DEFAULT $difficulty, 
             thirst INT NOT NULL DEFAULT $difficulty, 
             sleep INT NOT NULL DEFAULT $difficulty, 

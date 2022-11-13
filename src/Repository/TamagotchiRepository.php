@@ -64,8 +64,8 @@ class TamagotchiRepository
     public function createTamagotchi(int $ownerId, string $name): void
     {
       $this->manager->getConnection()
-        ->prepare("INSERT INTO Tamagotchi (owner_id, name) VALUES (:owner, :name)")
-        ->executeQuery(["owner" => $ownerId, "name" => $name])
+        ->prepare("CALL CREATE_TAMAGOCHI(:name ,:owner)")
+        ->executeQuery(["name" => $name, "owner" => $ownerId])
       ;
     }
 
@@ -116,15 +116,8 @@ class TamagotchiRepository
 
         if ($tamagotchi["hunger"] < 80) {
             $this->manager->getConnection()
-                ->prepare("UPDATE Tamagotchi SET hunger = :hunger, thirst = :thirst, sleep = :sleep, boredom = :boredom WHERE id = :id AND owner_id = :owner")
-                ->executeQuery([
-                    "hunger" => $newHunger,
-                    "thirst" => $newThirst,
-                    "sleep" => $newSleep,
-                    "boredom" => $newBoredom,
-                    "id" => $id,
-                    'owner' => $ownerId
-                ])
+                ->prepare("CALL EAT(:id)")
+                ->executeQuery(["id" => $id])
             ;
             $this->addAction($id, $ownerId);
 
